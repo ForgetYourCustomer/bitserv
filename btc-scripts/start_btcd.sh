@@ -1,12 +1,21 @@
 #!/bin/bash
 
-# In a shell dedicated to the bitcoin daemon 
-bitcoind -regtest -daemon
+# Check if --no-daemon argument is passed
+DAEMON_MODE="-daemon"
+if [ "$1" == "--no-daemon" ]; then
+    DAEMON_MODE=""
+fi
 
-# Wait for the daemon to start
-sleep 3
+# Start the bitcoin daemon with the appropriate mode
+bitcoind -regtest $DAEMON_MODE
 
-# Create the wallet if it doesn't exist, otherwise load it
-bitcoin-cli -regtest createwallet "regtest_wallet" 2>/dev/null || bitcoin-cli -regtest loadwallet "regtest_wallet" 2>/dev/null
+# Only wait and show messages if running in daemon mode
+if [ -n "$DAEMON_MODE" ]; then
+    # Wait for the daemon to start
+    sleep 3
 
-echo "Bitcoin daemon started and wallet loaded"
+    # Create the wallet if it doesn't exist, otherwise load it
+    bitcoin-cli -regtest createwallet "regtest_wallet" 2>/dev/null || bitcoin-cli -regtest loadwallet "regtest_wallet" 2>/dev/null
+
+    echo "Bitcoin daemon started and wallet loaded"
+fi
