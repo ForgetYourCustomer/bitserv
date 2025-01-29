@@ -1,2 +1,7 @@
 /target
 /pers/*
+.env
+.env.local
+.env.*.local
+.env.test
+.env.prod
