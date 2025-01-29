@@ -4,9 +4,7 @@ use bdk_wallet::bitcoin::Network;
 use log::info;
 use std::sync::Arc;
 
-use bitserv::{BitServWallet, Client};
-
-mod api;
+use bitserv::{api::create_router, config, BitServWallet, Client};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -14,10 +12,11 @@ async fn main() -> Result<()> {
     env_logger::init();
     info!("Starting BitServ wallet application...");
 
-    let bitcoind_url = "http://127.0.0.1:18443";
-    let bitcoind_username = "myusername";
-    let bitcoind_password = "mypassword";
-    let password = "your-secure-password";
+    let port = config::port();
+    let bitcoind_url = config::btcd_url();
+    let bitcoind_username = config::btcd_username();
+    let bitcoind_password = config::btcd_password();
+    let password = config::wallet_pw();
     let network = Network::Regtest;
 
     let auth = Auth::UserPass(bitcoind_username.to_string(), bitcoind_password.to_string());
@@ -31,11 +30,14 @@ async fn main() -> Result<()> {
     let wallet = Arc::new(wallet);
 
     // Create router
-    let app = api::create_router(wallet);
+    let app = create_router(wallet);
+
+    let bind_address = format!("127.0.0.1:{}", port);
 
     // Run server
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000").await?;
-    println!("Server running on http://127.0.0.1:3000");
+    let listener = tokio::net::TcpListener::bind(&bind_address).await?;
+
+    println!("Server running on {}", &bind_address);
     axum::serve(listener, app).await?;
 
     Ok(())
